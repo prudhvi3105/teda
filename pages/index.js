@@ -7,9 +7,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export default function Home() {
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     const response = await fetch("/api/predictions", {
       method: "POST",
       headers: {
@@ -19,11 +23,15 @@ export default function Home() {
         prompt: e.target.prompt.value,
       }),
     });
+
     let prediction = await response.json();
+
     if (response.status !== 201) {
       setError(prediction.detail);
+      setLoading(false);
       return;
     }
+
     setPrediction(prediction);
 
     while (
@@ -33,39 +41,45 @@ export default function Home() {
       await sleep(1000);
       const response = await fetch("/api/predictions/" + prediction.id);
       prediction = await response.json();
+
       if (response.status !== 200) {
         setError(prediction.detail);
+        setLoading(false);
         return;
       }
-      console.log({ prediction });
+
       setPrediction(prediction);
     }
+
+    setLoading(false);
   };
 
   return (
     <div className="container max-w-2xl mx-auto p-5">
       <Head>
-        <title>Teda</title>
+        <title>Teda.ai</title>
       </Head>
 
-      <h1 className="py-6 text-center font-bold text-2xl">
-        Teda.ai{" "}
-        
-      </h1>
-
+      <h1 className="py-6 text- font-bold text-2xl">Teda.ai</h1>
+      <link rel="icon" href="logo (1).png" type="image/x-icon"></link>
+      
       <form className="w-full flex" onSubmit={handleSubmit}>
         <input
           type="text"
-          className="flex-grow"
+          className="flex-grow border border-gray-300 rounded-md px-4 py-2 mr-2 focus:outline-none focus:border-blue-500"
           name="prompt"
           placeholder="Enter a prompt to display an image"
         />
-        <button className="button" type="submit">
-          Go!
+        <button
+          className="button bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Go!"}
         </button>
       </form>
 
-      {error && <div>{error}</div>}
+      {error && <div className="text-red-500 mt-2">{error}</div>}
 
       {prediction && (
         <>
@@ -79,7 +93,10 @@ export default function Home() {
               />
             </div>
           )}
-          <p className="py-3 text-sm opacity-50">status: {prediction.status}</p>
+          <p className="py-3 text-sm opacity-50">Status: {prediction.status}</p>
+          {prediction.status === "succeeded" && (
+            <p className="text-green-500">Prediction successful!</p>
+          )}
         </>
       )}
     </div>
