@@ -75,7 +75,7 @@ export default function Home() {
           type="submit"
           disabled={loading}
         >
-          {loading ? "Loading..." : "Go!"}
+          {loading ? "Loading..." : "⇧"}
         </button>
       </form>
 
